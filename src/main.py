@@ -1,6 +1,8 @@
+import argparse
 import asyncio
-import aiofiles
 import datetime
+
+import aiofiles
 
 
 async def main(address, port, history_file_path):
@@ -18,7 +20,11 @@ async def main(address, port, history_file_path):
             print(formatted_message, end="")
 
 
-if __name__ == '__main__':
-    address, port = "minechat.dvmn.org", 5000
-    history_file_path = "./history.log"
-    asyncio.run(main(address, port, history_file_path))
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument("--host", type=str, default="minechat.dvmn.org")
+    parser.add_argument("--port", type=int, default=5000)
+    parser.add_argument("--history", type=str, default="./history.log")
+
+    args = parser.parse_args()
+    asyncio.run(main(args.host, args.port, args.history))
