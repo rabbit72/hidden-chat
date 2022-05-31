@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import json
 import logging
 
 
@@ -20,6 +21,19 @@ def create_logger() -> logging.Logger:
 logger = create_logger()
 
 
+async def authenticate(reader, writer, user_token: str) -> bool:
+    success_authentication_message = (
+        "Welcome to chat! Post your message below. End it with an empty line."
+    )
+    await read_message(reader)
+    send_message(writer, user_token + "\n")
+    user_data = json.loads(await read_message(reader))
+    if not user_data:
+        return False
+    greeting = await read_message(reader)
+    return success_authentication_message in greeting
+
+
 def send_message(writer, message: str):
     logger.debug(message.rstrip())
     encoded_message = message.encode()
@@ -36,12 +50,12 @@ async def read_message(reader) -> str:
 async def main(address, port, user):
     message = "----------- Я СНОВА ТЕСТИРУЮ ЧАТИК.---------------"
     reader, writer = await asyncio.open_connection(address, port)
-    await read_message(reader)
-    send_message(writer, user + "\n")
-    await read_message(reader)
-    await read_message(reader)
-    send_message(writer, message + "\n\n")
-    await read_message(reader)
+    if await authenticate(reader, writer, user):
+        send_message(writer, message + "\n\n")
+        await read_message(reader)
+    else:
+        print(f"Неизвестный токен. Проверьте его или зарегистрируйте заново: {user}")
+        exit()
 
 
 if __name__ == "__main__":
