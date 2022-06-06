@@ -24,13 +24,18 @@ def create_logger() -> logging.Logger:
 
 logger = create_logger()
 
+EMPTY_STRING = ""
+
 
 async def load_user_token(target: str) -> str:
-    async with aiofiles.open(target, mode="r") as f:
-        secret = await f.read()
-        if not secret:
-            return ""
-        return json.loads(secret)["account_hash"]
+    try:
+        async with aiofiles.open(target, mode="r") as f:
+            secret = await f.read()
+            if not secret:
+                return EMPTY_STRING
+            return json.loads(secret)["account_hash"]
+    except FileNotFoundError:
+        return EMPTY_STRING
 
 
 async def register_new_user(address, port, user_name: str) -> dict:
@@ -95,7 +100,8 @@ async def main(address: str, port: int, new_user_name: str):
         await read_message(reader)
     else:
         print(
-            f"Неизвестный токен. Проверьте его или зарегистрируйте заново: {user_token}"
+            f"Неизвестный токен. "
+            f"Проверьте его или зарегистрируйте заново: {user_token}"
         )
         exit()
 
