@@ -38,12 +38,12 @@ async def load_user_token(target: str) -> str:
         return EMPTY_STRING
 
 
-async def register_new_user(address, port, user_name: str) -> dict:
+async def register(address, port, user_name: str) -> dict:
     reader, writer = await asyncio.open_connection(address, port)
     await read_message(reader)
-    send_message(writer, "\n")
+    submit_message(writer, "\n")
     await read_message(reader)
-    send_message(writer, user_name + "\n")
+    submit_message(writer, user_name + "\n")
     user_data = json.loads(await read_message(reader))
     writer.close()
     if not user_data:
@@ -62,7 +62,7 @@ async def authenticate(reader, writer, user_token: str) -> bool:
         "Welcome to chat! Post your message below. End it with an empty line."
     )
     await read_message(reader)
-    send_message(writer, user_token + "\n")
+    submit_message(writer, user_token + "\n")
     user_data = json.loads(await read_message(reader))
     if not user_data:
         return False
@@ -70,7 +70,7 @@ async def authenticate(reader, writer, user_token: str) -> bool:
     return success_authentication_message in greeting
 
 
-def send_message(writer, message: str):
+def submit_message(writer, message: str):
     logger.debug(message.rstrip())
     encoded_message = message.encode()
     writer.write(encoded_message)
@@ -85,7 +85,7 @@ async def read_message(reader) -> str:
 
 async def main(address: str, port: int, new_user_name: str):
     if new_user_name:
-        user_secret = await register_new_user(address, port, new_user_name)
+        user_secret = await register(address, port, new_user_name)
         await save_user_token(USER_TOKEN_FILE, user_secret)
 
     user_token = await load_user_token(USER_TOKEN_FILE)
@@ -96,7 +96,7 @@ async def main(address: str, port: int, new_user_name: str):
     message = "----------- Я СНОВА ТЕСТИРУЮ ЧАТИК.---------------"
     reader, writer = await asyncio.open_connection(address, port)
     if await authenticate(reader, writer, user_token):
-        send_message(writer, message + "\n\n")
+        submit_message(writer, message + "\n\n")
         await read_message(reader)
     else:
         print(
