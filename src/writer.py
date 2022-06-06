@@ -27,6 +27,22 @@ logger = create_logger()
 EMPTY_STRING = ""
 
 
+def sanitize(string: str) -> str:
+    """Can be extended with more operations"""
+    return string.strip()
+
+
+def contains_escape_control_symbols(string_: str) -> bool:
+    return "\n" in string_
+
+
+def check_strings(*args: str) -> None:
+    for string_ in args:
+        if contains_escape_control_symbols(string_.strip()):
+            print(f"входные данные не могут содержать \\n символ: {string_!r}")
+            exit()
+
+
 async def load_user_token(target: str) -> str:
     try:
         async with aiofiles.open(target, mode="r") as f:
@@ -83,7 +99,7 @@ async def read_message(reader) -> str:
     return decoded_message
 
 
-async def main(address: str, port: int, new_user_name: str):
+async def main(address: str, port: int, message: str, new_user_name: str):
     if new_user_name:
         user_secret = await register(address, port, new_user_name)
         await save_user_token(USER_TOKEN_FILE, user_secret)
@@ -93,7 +109,6 @@ async def main(address: str, port: int, new_user_name: str):
         print("Нет токена. Зарегистрируйте заново с --register {user}")
         exit()
 
-    message = "----------- Я СНОВА ТЕСТИРУЮ ЧАТИК.---------------"
     reader, writer = await asyncio.open_connection(address, port)
     if await authenticate(reader, writer, user_token):
         submit_message(writer, message + "\n\n")
@@ -110,7 +125,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--host", type=str, default="minechat.dvmn.org")
     parser.add_argument("--port", type=int, default=5050)
-    parser.add_argument("--register", type=str)
+    parser.add_argument("--register", type=str, required=False, default="")
+
+    message = "----------- Я СНОВА ТЕСТИРУЮ ЧАТИК.---------------"
 
     args = parser.parse_args()
-    asyncio.run(main(args.host, args.port, args.register))
+    clean_message = sanitize(message)
+    clean_register = sanitize(args.register)
+    check_strings(clean_message, clean_register)
+    asyncio.run(main(args.host, args.port, clean_message, clean_register))
