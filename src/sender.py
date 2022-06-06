@@ -123,14 +123,27 @@ async def main(address: str, port: int, message: str, new_user_name: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument("--host", type=str, default="minechat.dvmn.org")
-    parser.add_argument("--port", type=int, default=5050)
-    parser.add_argument("--register", type=str, required=False, default="")
-
-    message = "----------- Я СНОВА ТЕСТИРУЮ ЧАТИК.---------------"
+    parser.add_argument(
+        "--host", type=str, default="minechat.dvmn.org", help="an address of the chat"
+    )
+    parser.add_argument("--port", type=int, default=5050, help="a port of the chat")
+    parser.add_argument(
+        "--user",
+        type=str,
+        required=False,
+        default="",
+        help="a user name for creation a new one",
+    )
+    parser.add_argument(
+        "-m",
+        "--message",
+        type=str,
+        required=True,
+        help="provide what you want the world to see",
+    )
 
     args = parser.parse_args()
-    clean_message = sanitize(message)
-    clean_register = sanitize(args.register)
-    check_strings(clean_message, clean_register)
-    asyncio.run(main(args.host, args.port, clean_message, clean_register))
+    clean_message = sanitize(args.message)
+    clean_user_name = sanitize(args.user)
+    check_strings(clean_message, clean_user_name)
+    asyncio.run(main(args.host, args.port, clean_message, clean_user_name))
